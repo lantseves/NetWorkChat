@@ -1,15 +1,15 @@
 package ru.gb.jtwo.chat.client.giu.fx;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import ru.gb.jtwo.chat.client.core.ChatClient;
 import ru.gb.jtwo.chat.client.core.ChatClientListener;
+import ru.gb.jtwo.chat.common.Library;
 
-//Класс отвечает только за обновление GUI
+import java.util.Arrays;
+
+
 public class ClientController implements ChatClientListener {
 
     @FXML
@@ -27,10 +27,8 @@ public class ClientController implements ChatClientListener {
 
     private ChatClient client ;
 
-
     public ClientController() {
         client = new ChatClient(this) ;
-
     }
 
     public void onClickedLogin(ActionEvent actionEvent) {
@@ -39,7 +37,7 @@ public class ClientController implements ChatClientListener {
         String login = tfLogin.getText() ;
         String password = pfPassword.getText();
         if ("".equals(address) || "".equals(port) || "".equals(login) || "".equals(password)) {
-            printInfoMessage("Заполните параметры подключения");
+            printMessage("Заполните параметры подключения");
         } else {
             client.connect(address, port, login, password);
         }
@@ -56,12 +54,69 @@ public class ClientController implements ChatClientListener {
         tfMessage.setText("");
     }
 
-    private void printInfoMessage(String msg) {
-        taLog.appendText(msg + "\n");
-    }
-    
     @Override
     public void onClientMessage(String msg) {
-        printInfoMessage(msg);
+        printMessage(msg);
+    }
+
+    private void printMessage(String msg) {
+        String[] arrMsg = msg.split(Library.DELIMITER) ;
+        if (arrMsg.length < 2) return;
+
+        switch (arrMsg[0]) {
+            case Library.TYPE_BROADCAST: printBroadcastMessage(arrMsg[1], arrMsg[2], arrMsg[3]);
+                break;
+            case Library.AUTH_ACCEPT: printMessageAuthAccept(arrMsg[1]) ;
+                break;
+            case Library.AUTH_DENIED: printMessageAuthDenied(arrMsg[1]) ;
+                break;
+            case Library.MSG_FORMAT_INFO: printMessageInfo(arrMsg[1], arrMsg[2]);
+                break;
+            case Library.MSG_FORMAT_ERROR: printMessageError(arrMsg[1]);
+                break;
+            case Library.USER_ADD_CHAT: addUser(arrMsg[1]);
+                break;
+            case Library.USER_REMOVE_CHAT: removeUser(arrMsg[1]);
+                break;
+            case Library.USERS_LIST: initUserList(Arrays.copyOfRange(arrMsg, 1 , arrMsg.length));
+                break;
+            default: throw new RuntimeException(msg) ;
+        }
+
+        taLog.appendText(msg + "\n");
+    }
+
+    private void printBroadcastMessage(String date, String author, String msg ) {
+        // TODO
+    }
+
+    private void printMessageAuthAccept(String nickname) {
+        // TODO
+    }
+
+    private void printMessageAuthDenied(String nickname) {
+        // TODO
+    }
+
+    private void printMessageInfo(String date, String msg) {
+        // TODO
+    }
+
+    private void printMessageError(String msg) {
+        // TODO
+    }
+
+    private void addUser(String nickname) {
+        // TODO
+    }
+
+    private void removeUser(String nickname) {
+        // TODO
+    }
+
+    private void initUserList(String[] nicknames) {
+        for (String nickname : nicknames) {
+            addUser(nickname);
+        }
     }
 }

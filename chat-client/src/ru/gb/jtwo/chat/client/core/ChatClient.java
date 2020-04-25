@@ -14,7 +14,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
-//Класс отвечает только за получение и отправку сообщения серверу
+//Класс отвечает только за получение и отправку сообщения серверу, теперь к этому классу можно подключить любой GUI
 public class ChatClient implements SocketThreadListener {
 
     private final List<String> userList = new ArrayList<>();
