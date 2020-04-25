@@ -8,6 +8,8 @@ import ru.gb.jtwo.network.SocketThreadListener;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.channels.NonWritableChannelException;
+import java.util.List;
 import java.util.Vector;
 
 public class ChatServer implements ServerSocketThreadListener, SocketThreadListener {
@@ -89,8 +91,10 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     @Override
     public void onSocketStop(SocketThread thread) {
-        putLog("Socket stopped");
+        ClientThread client = (ClientThread) thread ;
+        putLog("Socket" + client.getNickname() +" stopped");
         clients.remove(thread);
+        sendToAllAuthorizedClients(Library.getUserRemoveChat(client.getNickname()));
     }
 
     @Override
@@ -105,7 +109,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
         if (client.isAuthorized()) {
             handleAuthMessage(client, msg);
         } else
-            handleNonAuthMessage(client, msg);
+           handleNonAuthMessage(client, msg);
     }
 
     @Override
@@ -114,7 +118,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     }
 
     void handleAuthMessage(ClientThread client, String msg) {
-        sendToAllAuthorizedClients(msg);
+        sendToAllAuthorizedClients(Library.getTypeBroadcast(client.getNickname() , msg));
     }
 
     void handleNonAuthMessage(ClientThread client, String msg) {
@@ -132,17 +136,37 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
             return;
         }
         client.authAccept(nickname);
-        sendToAllAuthorizedClients(Library.getTypeBroadcast("Server", nickname + " connected"));
+        //Автору сначало приходило сообщение об успешной авторизации, а следом рассылка, о том что он добавлен в чат
+        sendToAllAuthorizedClientsWithoutAuthor(Library.getUserAddChat(nickname) , client);
+        client.sendMessage(Library.getUsersList(getUserList(clients))) ;
+    }
+
+    //Синхронизировал, чтобы пока собираем список ников для отправки, другой поток не удалил пользователя
+    private synchronized String[] getUserList(List<SocketThread> clients) {
+        String[] arr = new String[clients.size()] ;
+        for(int i = 0 ; i < arr.length ; i++) {
+            ClientThread client = ((ClientThread) clients.get(i)) ;
+            if(client.isAuthorized())
+            arr[i] =client.getNickname() ;
+        }
+        return arr;
     }
 
     private void sendToAllAuthorizedClients(String msg) {
+        sendToAllAuthorizedClientsWithoutAuthor(msg , null);
+    }
+
+    private void sendToAllAuthorizedClientsWithoutAuthor(String msg , ClientThread clientThread) {
         for (int i = 0; i < clients.size(); i++) {
             ClientThread client = (ClientThread) clients.get(i);
-            if (!client.isAuthorized()) continue;
+            if (!client.isAuthorized() || client == clientThread) continue;
             client.sendMessage(msg);
         }
     }
 
     public void dropAllClients() {
+        for(SocketThread clientThread: clients) {
+            clientThread.close();
+        }
     }
 }
