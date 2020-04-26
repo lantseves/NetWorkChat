@@ -131,7 +131,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
         String password = arr[2];
         String nickname = SqlClient.getNickname(login, password);
         if (nickname == null) {
-            putLog("Invalid login attempt: " + login);
+            putLog(Library.getAuthDenied());
             client.authFail();
             return;
         }
@@ -157,8 +157,8 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     }
 
     private void sendToAllAuthorizedClientsWithoutAuthor(String msg , ClientThread clientThread) {
-        for (int i = 0; i < clients.size(); i++) {
-            ClientThread client = (ClientThread) clients.get(i);
+        for (SocketThread socketThread : clients) {
+            ClientThread client = (ClientThread) socketThread;
             if (!client.isAuthorized() || client == clientThread) continue;
             client.sendMessage(msg);
         }

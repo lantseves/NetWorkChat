@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
+<?import javafx.scene.text.TextFlow?>
 <GridPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="ru.gb.jtwo.chat.client.giu.fx.ClientController">
+          xmlns:fx="http://javafx.com/fxml"
+          fx:controller="ru.gb.jtwo.chat.client.giu.fx.ClientController">
 
     <HBox GridPane.rowIndex="0" GridPane.columnIndex="0" spacing="4" GridPane.columnSpan="2">
         <VBox spacing="2">
@@ -24,7 +22,7 @@
         </VBox>
         <HBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="10">
             <Button fx:id="btnLogin" text="Login" onAction="#onClickedLogin" />
-            <Button fx:id="btnDisconnect" text="Disconnect" onAction="#onClickedDisconnect"/>
+            <Button fx:id="btnDisconnect" text="Disconnect" onAction="#onClickedDisconnect" disable="true"/>
         </HBox>
 
         <VBox spacing="2">
@@ -41,16 +39,21 @@
         </VBox>
     </HBox>
 
-    <TextArea fx:id="taLog"
-              GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"
-              wrapText="true"
-              editable="false"/>
 
-    <ListView fx:id="lvUsers" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+    <ScrollPane GridPane.rowIndex="1" GridPane.columnIndex="0"  GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS" hbarPolicy="NEVER">
+        <AnchorPane>
+            <TextFlow fx:id="tfLog" maxWidth="580"/>
+        </AnchorPane>
+
+    </ScrollPane>
+
+
+    <TextArea fx:id="taUsers" GridPane.rowIndex="1" GridPane.columnIndex="1" minWidth="200" maxWidth="200" editable="false"/>
 
     <HBox GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="2" spacing="4">
-        <TextField fx:id="tfMessage" onAction="#onSendMessage" HBox.hgrow="ALWAYS"/>
-        <Button fx:id="btnSend" text="Send" onAction="#onSendMessage" minWidth="100"/>
+        <TextField fx:id="tfMessage" onAction="#onSendMessage" HBox.hgrow="ALWAYS" disable="true"/>
+        <Button fx:id="btnSend" text="Send" onAction="#onSendMessage" minWidth="100" disable="true"/>
 
     </HBox>
 

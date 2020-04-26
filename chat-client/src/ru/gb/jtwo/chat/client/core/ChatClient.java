@@ -55,17 +55,20 @@ public class ChatClient implements SocketThreadListener {
 
     @Override
     public void onSocketStart(SocketThread thread, Socket socket) {
-        putLog(Library.getMsgFormatInfo("Start"));
+        putLog(Library.getMsgFormatInfo("Начало подключения к серверу"));
+        listener.onStartConnect();
     }
 
     @Override
     public void onSocketStop(SocketThread thread) {
-        putLog(Library.getMsgFormatInfo("Stop"));
+        putLog(Library.getMsgFormatInfo("Соединение с сервером остановлено"));
+        listener.onDisconnect();
     }
 
     @Override
     public void onSocketReady(SocketThread thread, Socket socket) {
         thread.sendMessage(Library.getAuthRequest(login, password));
+        listener.onReadyConnect();
     }
 
     @Override

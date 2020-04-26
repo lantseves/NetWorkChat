@@ -1,16 +1,33 @@
 package ru.gb.jtwo.chat.client.giu.fx;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import ru.gb.jtwo.chat.client.core.ChatClient;
 import ru.gb.jtwo.chat.client.core.ChatClientListener;
 import ru.gb.jtwo.chat.common.Library;
 
-import java.util.Arrays;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 
 public class ClientController implements ChatClientListener {
+    private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM HH:mm:ss");
+
+    private final static Font FRONT_TITLE = Font.font("Verdana", FontWeight.BOLD , 12) ;
+    private final static Font FRONT_TEXT = Font.font("Verdana", 12) ;
+
+    private final static Color COLOR_TITLE_USERS_MESSAGE = Color.GREEN ;
+    private final static Color COLOR_TITLE_MY_MESSAGE = Color.BLUE ;
+    private final static Color COLOR_INFO_MESSAGE = Color.GREY ;
+    private final static Color COLOR_ERROR_MESSAGE = Color.RED ;
+    private final static Color COLOR_TEXT_USERS_MESSAGE = Color.BLACK ;
 
     @FXML
     private TextField tfAddress ;
@@ -19,13 +36,23 @@ public class ClientController implements ChatClientListener {
     @FXML
     private TextField tfMessage ;
     @FXML
-    private TextArea taLog;
+    private TextFlow tfLog;
     @FXML
     private TextField tfLogin;
     @FXML
     private PasswordField pfPassword ;
+    @FXML
+    private TextArea taUsers ;
+    @FXML
+    private Button btnSend ;
+    @FXML
+    private Button btnLogin ;
+    @FXML
+    private Button btnDisconnect ;
 
     private ChatClient client ;
+    private String nickname ;
+    private SortedSet<String> clients = new TreeSet<>() ;
 
     public ClientController() {
         client = new ChatClient(this) ;
@@ -37,7 +64,7 @@ public class ClientController implements ChatClientListener {
         String login = tfLogin.getText() ;
         String password = pfPassword.getText();
         if ("".equals(address) || "".equals(port) || "".equals(login) || "".equals(password)) {
-            printMessage("Заполните параметры подключения");
+            printMessage(Library.getMsgFormatError("Заполните параметры подключения"));
         } else {
             client.connect(address, port, login, password);
         }
@@ -59,64 +86,154 @@ public class ClientController implements ChatClientListener {
         printMessage(msg);
     }
 
+    @Override
+    public void onStartConnect() {
+
+    }
+
+    @Override
+    public void onReadyConnect() {
+        btnSend.setDisable(false);
+        tfMessage.setDisable(false);
+        btnDisconnect.setDisable(false);
+
+        tfLogin.setDisable(true);
+        pfPassword.setDisable(true);
+        btnLogin.setDisable(true);
+        tfAddress.setDisable(true);
+        tfPort.setDisable(true);
+    }
+
+    @Override
+    public void onDisconnect() {
+        btnSend.setDisable(true);
+        tfMessage.setDisable(true);
+        btnDisconnect.setDisable(true);
+
+        tfLogin.setDisable(false);
+        pfPassword.setDisable(false);
+        btnLogin.setDisable(false);
+        tfAddress.setDisable(false);
+        tfPort.setDisable(false);
+        clients.clear();
+        updateListUsers();
+    }
+
     private void printMessage(String msg) {
         String[] arrMsg = msg.split(Library.DELIMITER) ;
-        if (arrMsg.length < 2) return;
+        if (arrMsg.length < 1) return;
 
         switch (arrMsg[0]) {
             case Library.TYPE_BROADCAST: printBroadcastMessage(arrMsg[1], arrMsg[2], arrMsg[3]);
                 break;
             case Library.AUTH_ACCEPT: printMessageAuthAccept(arrMsg[1]) ;
                 break;
-            case Library.AUTH_DENIED: printMessageAuthDenied(arrMsg[1]) ;
+            case Library.AUTH_DENIED: printMessageAuthDenied() ;
                 break;
             case Library.MSG_FORMAT_INFO: printMessageInfo(arrMsg[1], arrMsg[2]);
                 break;
             case Library.MSG_FORMAT_ERROR: printMessageError(arrMsg[1]);
                 break;
-            case Library.USER_ADD_CHAT: addUser(arrMsg[1]);
+            case Library.USER_ADD_CHAT: printAddUser(arrMsg[1]);
                 break;
-            case Library.USER_REMOVE_CHAT: removeUser(arrMsg[1]);
+            case Library.USER_REMOVE_CHAT: printRemoveUser(arrMsg[1]);
                 break;
             case Library.USERS_LIST: initUserList(Arrays.copyOfRange(arrMsg, 1 , arrMsg.length));
                 break;
             default: throw new RuntimeException(msg) ;
         }
-
-        taLog.appendText(msg + "\n");
     }
 
     private void printBroadcastMessage(String date, String author, String msg ) {
-        // TODO
+
+        Text title = new Text(String.format("%s %s:\n" , author, getDateString(date)));
+        Color color = author.equals(nickname) ? COLOR_TITLE_MY_MESSAGE : COLOR_TITLE_USERS_MESSAGE;
+        title.setFill(color);
+        title.setFont(FRONT_TITLE);
+
+        Text text = new Text(msg + "\n\n") ;
+        text.setFill(COLOR_TEXT_USERS_MESSAGE);
+        text.setFont(FRONT_TEXT);
+
+        print(title, text);
     }
 
     private void printMessageAuthAccept(String nickname) {
-        // TODO
+        Text text = getTextLineTextFlow(nickname + " успешно авторизован.", COLOR_INFO_MESSAGE, FRONT_TITLE) ;
+        print(text);
+        this.nickname = nickname ;
     }
 
-    private void printMessageAuthDenied(String nickname) {
-        // TODO
+    private void printMessageAuthDenied() {
+        Text text = getTextLineTextFlow("Введённые вами данные не верны, проверьте логин и пароль.", COLOR_INFO_MESSAGE, FRONT_TITLE) ;
+        print(text);
     }
 
     private void printMessageInfo(String date, String msg) {
-        // TODO
+        Text text = getTextLineTextFlow(getDateString(date) + " " + msg, COLOR_INFO_MESSAGE, FRONT_TITLE) ;
+        print(text);
     }
 
     private void printMessageError(String msg) {
-        // TODO
+        Text text = getTextLineTextFlow("Пользователь " + nickname + " добавился в чат.", COLOR_ERROR_MESSAGE, FRONT_TITLE) ;
+        print(text);
     }
 
-    private void addUser(String nickname) {
-        // TODO
+    private void printAddUser(String nickname) {
+        Text text = getTextLineTextFlow("Пользователь " + nickname + " добавился в чат.", COLOR_INFO_MESSAGE, FRONT_TITLE) ;
+        print(text);
+        addUserList(nickname);
     }
 
-    private void removeUser(String nickname) {
-        // TODO
+    private void printRemoveUser(String nickname) {
+        Text text = getTextLineTextFlow("Пользователь " + nickname + " покинул чат.", COLOR_INFO_MESSAGE, FRONT_TITLE) ;
+        print(text);
+        removeUserList(nickname);
     }
 
     private void initUserList(String[] nicknames) {
-        for (String nickname : nicknames) {
-            addUser(nickname);
+        clients.clear();
+        clients.addAll(Arrays.asList(nicknames)) ;
+        updateListUsers();
+    }
+
+    /**
+    UtilsMethod
+     */
+
+    private Text getTextLineTextFlow(String msg , Color color , Font font) {
+        Text text = new Text(msg + "\n\n") ;
+        text.setFont(font);
+        text.setFill(color);
+        return text ;
+    }
+
+    private void addUserList(String nickname) {
+        clients.add(nickname) ;
+        updateListUsers();
+    }
+
+    private void removeUserList(String nickname) {
+        clients.remove(nickname) ;
+        updateListUsers();
+    }
+
+    private void updateListUsers() {
+        taUsers.clear();
+        for(String nickname : clients) {
+            taUsers.appendText(nickname + "\n");
         }
+    }
+
+    private String getDateString(String date) {
+        return DATE_FORMAT.format( new Date(Long.parseLong(date))) ;
+    }
+
+    private void print(Text... texts) {
+        Platform.runLater(() -> {
+            for(Text text: texts) {
+                tfLog.getChildren().add(text);
+            }
+        });
     }
 }
