@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.text.TextFlow?>
+<GridPane xmlns="http://javafx.com/javafx"
+          xmlns:fx="http://javafx.com/fxml"
+          fx:controller="ru.gb.jtwo.chat.client.giu.fx.ClientController">
+
+    <HBox GridPane.rowIndex="0" GridPane.columnIndex="0" spacing="4" GridPane.columnSpan="2">
+        <VBox spacing="2">
+            <HBox spacing="2" alignment="CENTER_RIGHT">
+                <Label text="Логин:"/>
+                <TextField fx:id="tfLogin" text="lantsev"/>
+            </HBox>
+
+            <HBox spacing="2" alignment="CENTER_RIGHT">
+                <Label text="Пароль:"/>
+                <PasswordField fx:id="pfPassword" text="123"/>
+            </HBox>
+        </VBox>
+        <HBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="10">
+            <Button fx:id="btnLogin" text="Login" onAction="#onClickedLogin" />
+            <Button fx:id="btnDisconnect" text="Disconnect" onAction="#onClickedDisconnect" disable="true"/>
+        </HBox>
+
+        <VBox spacing="2">
+            <HBox spacing="2" alignment="CENTER_RIGHT">
+                <Label text="Адрес:"/>
+
+                <TextField fx:id="tfAddress" text="127.0.0.1"/>
+            </HBox>
+
+            <HBox spacing="2" alignment="CENTER_RIGHT">
+                <Label text="Порт:"/>
+                <TextField fx:id="tfPort" text="8189"/>
+            </HBox>
+        </VBox>
+    </HBox>
+
+
+
+    <ScrollPane GridPane.rowIndex="1" GridPane.columnIndex="0"  GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS" hbarPolicy="NEVER">
+        <AnchorPane>
+            <TextFlow fx:id="tfLog" maxWidth="580"/>
+        </AnchorPane>
+
+    </ScrollPane>
+
+
+    <TextArea fx:id="taUsers" GridPane.rowIndex="1" GridPane.columnIndex="1" minWidth="200" maxWidth="200" editable="false"/>
+
+    <HBox GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="2" spacing="4">
+        <TextField fx:id="tfMessage" onAction="#onSendMessage" HBox.hgrow="ALWAYS" disable="true"/>
+        <Button fx:id="btnSend" text="Send" onAction="#onSendMessage" minWidth="100" disable="true"/>
+
+    </HBox>
+
+
+
+
+</GridPane>
