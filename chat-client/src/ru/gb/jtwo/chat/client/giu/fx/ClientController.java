@@ -42,6 +42,8 @@ public class ClientController implements ChatClientListener {
     @FXML
     private PasswordField pfPassword ;
     @FXML
+    private TextField tfnickname ;
+    @FXML
     private TextArea taUsers ;
     @FXML
     private Button btnSend ;
@@ -49,6 +51,8 @@ public class ClientController implements ChatClientListener {
     private Button btnLogin ;
     @FXML
     private Button btnDisconnect ;
+    @FXML
+    private Button btnRename ;
 
     private ChatClient client ;
     private String nickname ;
@@ -74,6 +78,11 @@ public class ClientController implements ChatClientListener {
         client.disconnect();
     }
 
+    public void onClickedRename(ActionEvent actionEvent) {
+        if(!nickname.equals(tfnickname.getText()))
+        client.rename(tfLogin.getText() , tfnickname.getText());
+    }
+
     public void onSendMessage(ActionEvent actionEvent) {
         String msg = tfMessage.getText() ;
         if (!"".equals(msg))
@@ -96,12 +105,14 @@ public class ClientController implements ChatClientListener {
         btnSend.setDisable(false);
         tfMessage.setDisable(false);
         btnDisconnect.setDisable(false);
+        btnRename.setDisable(false);
 
         tfLogin.setDisable(true);
         pfPassword.setDisable(true);
         btnLogin.setDisable(true);
         tfAddress.setDisable(true);
         tfPort.setDisable(true);
+        tfnickname.setText(this.nickname);
     }
 
     @Override
@@ -109,12 +120,15 @@ public class ClientController implements ChatClientListener {
         btnSend.setDisable(true);
         tfMessage.setDisable(true);
         btnDisconnect.setDisable(true);
+        btnRename.setDisable(true);
 
         tfLogin.setDisable(false);
         pfPassword.setDisable(false);
         btnLogin.setDisable(false);
         tfAddress.setDisable(false);
         tfPort.setDisable(false);
+
+        tfnickname.clear();
         clients.clear();
         updateListUsers();
     }
@@ -122,13 +136,16 @@ public class ClientController implements ChatClientListener {
     private void printMessage(String msg) {
         String[] arrMsg = msg.split(Library.DELIMITER) ;
         if (arrMsg.length < 1) return;
-
         switch (arrMsg[0]) {
             case Library.TYPE_BROADCAST: printBroadcastMessage(arrMsg[1], arrMsg[2], arrMsg[3]);
                 break;
             case Library.AUTH_ACCEPT: printMessageAuthAccept(arrMsg[1]) ;
                 break;
             case Library.AUTH_DENIED: printMessageAuthDenied() ;
+                break;
+            case Library.RENAME_ACCEPT: renameAccept(arrMsg[1]);
+                break;
+            case Library.RENAME_DENIED: printMessageError("Не удалось выполнить смену имени пользователия, повторите попытку!!!");
                 break;
             case Library.MSG_FORMAT_INFO: printMessageInfo(arrMsg[1], arrMsg[2]);
                 break;
@@ -162,11 +179,18 @@ public class ClientController implements ChatClientListener {
         Text text = getTextLineTextFlow(nickname + " успешно авторизован.", COLOR_INFO_MESSAGE, FRONT_TITLE) ;
         print(text);
         this.nickname = nickname ;
+        tfnickname.setText(nickname);
     }
 
     private void printMessageAuthDenied() {
         Text text = getTextLineTextFlow("Введённые вами данные не верны, проверьте логин и пароль.", COLOR_INFO_MESSAGE, FRONT_TITLE) ;
         print(text);
+    }
+
+    private void renameAccept(String newNickname) {
+        this.nickname = newNickname ;
+        updateListUsers();
+        printMessageInfo(String.valueOf(new Date().getTime()), "Имя пользователя изменено на " + nickname);
     }
 
     private void printMessageInfo(String date, String msg) {
@@ -175,7 +199,7 @@ public class ClientController implements ChatClientListener {
     }
 
     private void printMessageError(String msg) {
-        Text text = getTextLineTextFlow("Пользователь " + nickname + " добавился в чат.", COLOR_ERROR_MESSAGE, FRONT_TITLE) ;
+        Text text = getTextLineTextFlow(msg, COLOR_ERROR_MESSAGE, FRONT_TITLE) ;
         print(text);
     }
 

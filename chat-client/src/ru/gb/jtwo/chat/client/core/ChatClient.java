@@ -53,6 +53,14 @@ public class ChatClient implements SocketThreadListener {
             putLog(Library.getMsgFormatError("Вы не авторизованы на сервере"));
     }
 
+    public void rename(String login , String newNickname) {
+        if(socketThread !=null) {
+            socketThread.sendMessage(Library.getRenameRequest(login , newNickname)) ;
+        } else {
+            putLog(Library.getMsgFormatError("Вы не авторизованы на сервере"));
+        }
+    }
+
     @Override
     public void onSocketStart(SocketThread thread, Socket socket) {
         putLog(Library.getMsgFormatInfo("Начало подключения к серверу"));

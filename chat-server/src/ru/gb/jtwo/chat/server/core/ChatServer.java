@@ -8,7 +8,7 @@ import ru.gb.jtwo.network.SocketThreadListener;
 
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.channels.NonWritableChannelException;
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
@@ -43,7 +43,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     /**
      * Server Socket Thread Listener methods
-     * */
+     */
 
     @Override
     public void onServerStarted(ServerSocketThread thread) {
@@ -82,7 +82,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     /**
      * Socket Thread Listener methods
-     * */
+     */
 
     @Override
     public void onSocketStart(SocketThread thread, Socket socket) {
@@ -91,8 +91,8 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     @Override
     public void onSocketStop(SocketThread thread) {
-        ClientThread client = (ClientThread) thread ;
-        putLog("Socket" + client.getNickname() +" stopped");
+        ClientThread client = (ClientThread) thread;
+        putLog("Socket" + client.getNickname() + " stopped");
         clients.remove(thread);
         sendToAllAuthorizedClients(Library.getUserRemoveChat(client.getNickname()));
     }
@@ -107,9 +107,15 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     public void onReceiveString(SocketThread thread, Socket socket, String msg) {
         ClientThread client = (ClientThread) thread;
         if (client.isAuthorized()) {
-            handleAuthMessage(client, msg);
+            switch (Library.getTypeMessage(msg)) {
+                case Library.RENAME_REQUEST:
+                    handleRenameRequest(client, msg);
+                    break;
+                default: handleAuthMessage(client, msg);
+                    break;
+            }
         } else
-           handleNonAuthMessage(client, msg);
+            handleNonAuthMessage(client, msg);
     }
 
     @Override
@@ -117,11 +123,11 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
         throwable.printStackTrace();
     }
 
-    void handleAuthMessage(ClientThread client, String msg) {
-        sendToAllAuthorizedClients(Library.getTypeBroadcast(client.getNickname() , msg));
+    private void handleAuthMessage(ClientThread client, String msg) {
+        sendToAllAuthorizedClients(Library.getTypeBroadcast(client.getNickname(), msg));
     }
 
-    void handleNonAuthMessage(ClientThread client, String msg) {
+    private void handleNonAuthMessage(ClientThread client, String msg) {
         String[] arr = msg.split(Library.DELIMITER);
         if (arr.length != 3 || !arr[0].equals(Library.AUTH_REQUEST)) {
             client.msgFormatError(msg);
@@ -137,26 +143,41 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
         }
         client.authAccept(nickname);
         //Автору сначало приходило сообщение об успешной авторизации, а следом рассылка, о том что он добавлен в чат
-        sendToAllAuthorizedClientsWithoutAuthor(Library.getUserAddChat(nickname) , client);
-        client.sendMessage(Library.getUsersList(getUserList(clients))) ;
+        sendToAllAuthorizedClientsWithoutAuthor(Library.getUserAddChat(nickname), client);
+        client.sendMessage(Library.getUsersList(getUserList(clients)));
     }
 
+    private void handleRenameRequest(ClientThread client, String msg) {
+        String[] arr = msg.split(Library.DELIMITER);
+        String login = arr[1];
+        String newNickname = arr[2] ;
+        if (SqlClient.setNickname(login, newNickname)){
+            sendToAllAuthorizedClientsWithoutAuthor(Library.getMsgFormatInfo("Пользователь " + client.getNickname()
+                    + " был переименован в " + newNickname) , client);
+
+            client.renameAccept(newNickname);
+
+            sendToAllAuthorizedClients(Library.getUsersList(getUserList(clients)));
+        } else {
+            client.renameDenied();
+        }
+    }
     //Синхронизировал, чтобы пока собираем список ников для отправки, другой поток не удалил пользователя
     private synchronized String[] getUserList(List<SocketThread> clients) {
-        String[] arr = new String[clients.size()] ;
-        for(int i = 0 ; i < arr.length ; i++) {
-            ClientThread client = ((ClientThread) clients.get(i)) ;
-            if(client.isAuthorized())
-            arr[i] =client.getNickname() ;
+        String[] arr = new String[clients.size()];
+        for (int i = 0; i < arr.length; i++) {
+            ClientThread client = ((ClientThread) clients.get(i));
+            if (client.isAuthorized())
+                arr[i] = client.getNickname();
         }
         return arr;
     }
 
     private void sendToAllAuthorizedClients(String msg) {
-        sendToAllAuthorizedClientsWithoutAuthor(msg , null);
+        sendToAllAuthorizedClientsWithoutAuthor(msg, null);
     }
 
-    private void sendToAllAuthorizedClientsWithoutAuthor(String msg , ClientThread clientThread) {
+    private void sendToAllAuthorizedClientsWithoutAuthor(String msg, ClientThread clientThread) {
         for (SocketThread socketThread : clients) {
             ClientThread client = (ClientThread) socketThread;
             if (!client.isAuthorized() || client == clientThread) continue;
@@ -165,7 +186,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     }
 
     public void dropAllClients() {
-        for(SocketThread clientThread: clients) {
+        for (SocketThread clientThread : clients) {
             clientThread.close();
         }
     }

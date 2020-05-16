@@ -19,10 +19,16 @@
                 <Label text="Пароль:"/>
                 <PasswordField fx:id="pfPassword" text="123"/>
             </HBox>
+
+            <HBox spacing="2" alignment="CENTER_RIGHT">
+                <Label text="Имя:"/>
+                <TextField fx:id="tfnickname"/>
+            </HBox>
         </VBox>
         <HBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="10">
             <Button fx:id="btnLogin" text="Login" onAction="#onClickedLogin" />
             <Button fx:id="btnDisconnect" text="Disconnect" onAction="#onClickedDisconnect" disable="true"/>
+            <Button fx:id="btnRename" text="Rename" onAction="#onClickedRename" disable="true"/>
         </HBox>
 
         <VBox spacing="2">

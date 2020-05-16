@@ -16,26 +16,41 @@ public class Library {
     * */
 
     public static final String DELIMITER = "±";
+
     //Запрос авторизации
     public static final String AUTH_REQUEST = "/auth_request";
     //Положительный ответ об авторизации
     public static final String AUTH_ACCEPT = "/auth_accept";
     //Отрицательный ответ об авторизации
     public static final String AUTH_DENIED = "/auth_denied";
+
+    //Запрос на смену никнейма
+    public static final String RENAME_REQUEST = "/rename_request" ;
+    //Смена ника выполнено успешно
+    public static final String RENAME_ACCEPT = "/rename_accept" ;
+    //Смена ника не успешна
+    public static final String RENAME_DENIED = "/rename_denied" ;
+
     //Сообщение об ошибке
     public static final String MSG_FORMAT_ERROR = "/msg_format_error";
     // Сообщения с инфорамцией от сервера
     public static final String MSG_FORMAT_INFO = "/msg_format_info";
+
     //Пользователь добавился в чат
     public static final String USER_ADD_CHAT = "/user_add_chat";
     //Пользователь покинул чат
     public static final String USER_REMOVE_CHAT = "/user_remove_chat";
     // Список пользователей в чате
-    public static final String USERS_LIST = "users_list" ;
+    public static final String USERS_LIST = "/users_list" ;
 
     // если мы вдруг не поняли, что за сообщение и не смогли разобрать
     public static final String TYPE_BROADCAST = "/bcast";
-    // то есть сообщение, которое будет посылаться всем
+
+    //Получить тип сообщения
+    public static String getTypeMessage(String msg) {
+        String[] arr = msg.split(DELIMITER) ;
+        return arr[0] ;
+    }
 
     // Метод собирает сообщение авторизации для отправки на сервер
     public static String getAuthRequest(String login, String password) {
@@ -52,6 +67,20 @@ public class Library {
         return AUTH_DENIED;
     }
 
+    // запрос на смену никнейма
+    public static String getRenameRequest(String login, String newNickname) {
+        return RENAME_REQUEST + DELIMITER + login + DELIMITER + newNickname ;
+    }
+
+    // успешная смена никнейма
+    public static String getRenameAccept(String newNickname) {
+        return RENAME_ACCEPT + DELIMITER + newNickname ;
+    }
+
+    //смена никнейма не удалась
+    public static String getRenameDenied() {
+        return RENAME_DENIED ;
+    }
     //Метод для сообщений об ошибке, не для массовой рассылки
     public static String getMsgFormatError(String message) {
         return MSG_FORMAT_ERROR + DELIMITER + message;
@@ -74,7 +103,7 @@ public class Library {
     public static String getUsersList(String[] users) {
         StringBuilder result = new StringBuilder(USERS_LIST) ;
         for(String nickname : users) {
-            result.append(DELIMITER + nickname);
+            result.append(DELIMITER).append(nickname);
         }
         return result.toString() ;
     }
