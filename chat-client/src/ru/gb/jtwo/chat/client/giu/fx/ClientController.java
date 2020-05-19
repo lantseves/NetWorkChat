@@ -3,6 +3,7 @@ package ru.gb.jtwo.chat.client.giu.fx;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -13,11 +14,12 @@ import ru.gb.jtwo.chat.client.core.ChatClient;
 import ru.gb.jtwo.chat.client.core.ChatClientListener;
 import ru.gb.jtwo.chat.common.Library;
 
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 
-public class ClientController implements ChatClientListener {
+public class ClientController implements ChatClientListener , Initializable {
     private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM HH:mm:ss");
 
     private final static Font FRONT_TITLE = Font.font("Verdana", FontWeight.BOLD , 12) ;
@@ -62,13 +64,18 @@ public class ClientController implements ChatClientListener {
         client = new ChatClient(this) ;
     }
 
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        printLogMessage() ;
+    }
+
     public void onClickedLogin(ActionEvent actionEvent) {
         String address = tfAddress.getText() ;
         String port = tfPort.getText() ;
         String login = tfLogin.getText() ;
         String password = pfPassword.getText();
         if ("".equals(address) || "".equals(port) || "".equals(login) || "".equals(password)) {
-            printMessage(Library.getMsgFormatError("Заполните параметры подключения"));
+            onClientMessage(Library.getMsgFormatError("Заполните параметры подключения"));
         } else {
             client.connect(address, port, login, password);
         }
@@ -93,6 +100,7 @@ public class ClientController implements ChatClientListener {
     @Override
     public void onClientMessage(String msg) {
         printMessage(msg);
+        client.addMessageInLog(msg);
     }
 
     @Override
@@ -113,6 +121,8 @@ public class ClientController implements ChatClientListener {
         tfAddress.setDisable(true);
         tfPort.setDisable(true);
         tfnickname.setText(this.nickname);
+
+        printLogMessage();
     }
 
     @Override
@@ -143,7 +153,7 @@ public class ClientController implements ChatClientListener {
                 break;
             case Library.AUTH_DENIED: printMessageAuthDenied() ;
                 break;
-            case Library.RENAME_ACCEPT: renameAccept(arrMsg[1]);
+            case Library.RENAME_ACCEPT: printRenameAccept(arrMsg[1]);
                 break;
             case Library.RENAME_DENIED: printMessageError("Не удалось выполнить смену имени пользователия, повторите попытку!!!");
                 break;
@@ -187,14 +197,15 @@ public class ClientController implements ChatClientListener {
         print(text);
     }
 
-    private void renameAccept(String newNickname) {
+    private void printRenameAccept(String newNickname) {
         this.nickname = newNickname ;
         updateListUsers();
-        printMessageInfo(String.valueOf(new Date().getTime()), "Имя пользователя изменено на " + nickname);
+        Text text = getTextLineTextFlow("Имя пользователя изменено на " + nickname, COLOR_INFO_MESSAGE, FRONT_TITLE) ;
+        print(text);
     }
 
     private void printMessageInfo(String date, String msg) {
-        Text text = getTextLineTextFlow(getDateString(date) + " " + msg, COLOR_INFO_MESSAGE, FRONT_TITLE) ;
+        Text text = getTextLineTextFlow(getDateString(date) + " " +msg, COLOR_INFO_MESSAGE, FRONT_TITLE) ;
         print(text);
     }
 
@@ -221,9 +232,20 @@ public class ClientController implements ChatClientListener {
         updateListUsers();
     }
 
+    private void printLogMessage() {
+        clearTfLog();
+        String[] msgs = client.loadMessageFromLog(tfLogin.getText()) ;
+        if (msgs != null) {
+            for (String s : msgs) {
+                printMessage(s);
+            }
+        }
+    }
+
     /**
     UtilsMethod
      */
+
 
     private Text getTextLineTextFlow(String msg , Color color , Font font) {
         Text text = new Text(msg + "\n\n") ;
@@ -259,5 +281,9 @@ public class ClientController implements ChatClientListener {
                 tfLog.getChildren().add(text);
             }
         });
+    }
+
+    private void clearTfLog() {
+        Platform.runLater(() -> tfLog.getChildren().clear());
     }
 }
