@@ -39,5 +39,13 @@ public class ClientThread extends SocketThread {
         close();
     }
 
+    public void renameAccept(String newNickname) {
+        this.nickname = newNickname ;
+        sendMessage(Library.getRenameAccept(newNickname)) ;
+    }
+
+    public void renameDenied() {
+        sendMessage(Library.getAuthDenied());
+    }
 
 }

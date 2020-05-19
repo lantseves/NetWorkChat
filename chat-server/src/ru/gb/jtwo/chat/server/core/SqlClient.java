@@ -29,6 +29,15 @@ public class SqlClient {
         return null;
     }
 
+    synchronized static boolean setNickname(String login, String newLogin) {
+        String query = String.format("UPDATE users SET nickname = '%s' WHERE login = '%s'" , newLogin , login) ;
+        try{
+            return statement.executeUpdate(query) > 0 ;
+        } catch (SQLException e) {
+            throw new RuntimeException(e) ;
+        }
+    }
+
     synchronized static void disconnect() {
         try {
             connection.close();
