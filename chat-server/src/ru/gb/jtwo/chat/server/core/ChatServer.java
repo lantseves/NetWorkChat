@@ -8,14 +8,16 @@ import ru.gb.jtwo.network.SocketThreadListener;
 
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Date;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ChatServer implements ServerSocketThreadListener, SocketThreadListener {
 
     ServerSocketThread server;
     ChatServerListener listener;
+
     Vector<SocketThread> clients = new Vector<>();
 
     public ChatServer(ChatServerListener listener) {
@@ -189,5 +191,6 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
         for (SocketThread clientThread : clients) {
             clientThread.close();
         }
+
     }
 }
