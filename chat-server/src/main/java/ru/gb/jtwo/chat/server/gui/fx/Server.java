@@ -6,6 +6,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/*
+После добавления Maven перестал работать JavaFX, наверное проблемы с зависимостями
+Для запуска сервера чата, пока не пофикшу использовать класс ServerGUI
+ */
 public class Server extends Application {
 
     public static void main(String[] args) {
