@@ -1,5 +1,7 @@
 package ru.gb.jtwo.chat.server.core;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.gb.jtwo.chat.common.Library;
 import ru.gb.jtwo.network.ServerSocketThread;
 import ru.gb.jtwo.network.ServerSocketThreadListener;
@@ -10,10 +12,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 import java.util.Vector;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ChatServer implements ServerSocketThreadListener, SocketThreadListener {
+
+    private static final Logger logger = LogManager.getLogger();
 
     ServerSocketThread server;
     ChatServerListener listener;
@@ -25,14 +27,17 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     }
 
     public void start(int port) {
-        if (server != null && server.isAlive())
+        if (server != null && server.isAlive()) {
+            logger.warn("Already running");
             putLog("Already running");
+        }
         else
             server = new ServerSocketThread(this, "Server", port, 2000);
     }
 
     public void stop() {
         if (server == null || !server.isAlive()) {
+            logger.warn("Nothing to stop");
             putLog("Nothing to stop");
         } else {
             server.interrupt();
@@ -49,12 +54,14 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     @Override
     public void onServerStarted(ServerSocketThread thread) {
+        logger.info("Server thread started");
         putLog("Server thread started");
         SqlClient.connect();
     }
 
     @Override
     public void onServerCreated(ServerSocketThread thread, ServerSocket server) {
+        logger.info("Server socket started");
         putLog("Server socket started");
     }
 
@@ -65,6 +72,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     @Override
     public void onSocketAccepted(ServerSocketThread thread, ServerSocket server, Socket socket) {
+        logger.info("Client connected");
         putLog("Client connected");
         String name = "SocketThread " + socket.getInetAddress() + ":" + socket.getPort();
         new ClientThread(this, name, socket);
@@ -72,12 +80,14 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     @Override
     public void onServerException(ServerSocketThread thread, Throwable throwable) {
+        logger.error(throwable.getMessage() , throwable);
         putLog("Server exception");
         throwable.printStackTrace();
     }
 
     @Override
     public void onServerStop(ServerSocketThread thread) {
+        logger.info("Server thread stopped");
         putLog("Server thread stopped");
         SqlClient.disconnect();
     }
@@ -88,12 +98,14 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     @Override
     public void onSocketStart(SocketThread thread, Socket socket) {
+        logger.info("Socket started");
         putLog("Socket started");
     }
 
     @Override
     public void onSocketStop(SocketThread thread) {
         ClientThread client = (ClientThread) thread;
+        logger.info("Socket" + client.getNickname() + " stopped");
         putLog("Socket" + client.getNickname() + " stopped");
         clients.remove(thread);
         sendToAllAuthorizedClients(Library.getUserRemoveChat(client.getNickname()));
@@ -101,6 +113,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     @Override
     public void onSocketReady(SocketThread thread, Socket socket) {
+        logger.info("Socket ready");
         putLog("Socket ready");
         clients.add(thread);
     }
@@ -108,6 +121,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     @Override
     public void onReceiveString(SocketThread thread, Socket socket, String msg) {
         ClientThread client = (ClientThread) thread;
+        logger.info(client.getName() + " " + msg);
         if (client.isAuthorized()) {
             switch (Library.getTypeMessage(msg)) {
                 case Library.RENAME_REQUEST:

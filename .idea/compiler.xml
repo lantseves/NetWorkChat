@@ -6,10 +6,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="chat-server" />
         <module name="NetWorkChat" />
+        <module name="lessons" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="chat-server" target="8" />
+      <module name="lessons" target="8" />
       <module name="NetWorkChat" target="1.5" />
     </bytecodeTargetLevel>
   </component>

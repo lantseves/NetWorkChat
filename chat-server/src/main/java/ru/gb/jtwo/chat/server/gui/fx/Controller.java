@@ -2,6 +2,7 @@ package ru.gb.jtwo.chat.server.gui.fx;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import ru.gb.jtwo.chat.server.core.ChatServer;
 import ru.gb.jtwo.chat.server.core.ChatServerListener;
@@ -10,6 +11,12 @@ public class Controller implements ChatServerListener {
 
     @FXML
     public TextArea taLog;
+    @FXML
+    public Button btnStart;
+    @FXML
+    public Button btnStop;
+    @FXML
+    public Button btnDrop;
 
     private ChatServer server = new ChatServer(this);
 
